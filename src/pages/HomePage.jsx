@@ -1,3 +1,4 @@
+import CategorySection from '../components/home/CategorySection'
 import Hero from '../components/home/Hero'
 import Navbar from '../components/layout/Navbar'
 
@@ -6,6 +7,7 @@ const HomePage = () => {
     <div>
       <Navbar />
       <Hero/>
+      <CategorySection/>
       <h1 style={{ padding: '40px', color: '#4F46E5' }}>Home Page</h1>
     </div>
   )
