@@ -1,6 +1,9 @@
 import CategorySection from '../components/home/CategorySection'
+import CTABanner from '../components/home/CTABanner'
 import FeaturedJobs from '../components/home/FeaturedJobs'
+import Footer from '../components/home/Footer'
 import Hero from '../components/home/Hero'
+import LatestJobs from '../components/home/LatestJobs'
 import Navbar from '../components/layout/Navbar'
 
 const HomePage = () => {
@@ -10,7 +13,10 @@ const HomePage = () => {
       <Hero/>
       <CategorySection/>
       <FeaturedJobs/>
-      <h1 style={{ padding: '40px', color: '#4F46E5' }}>Home Page</h1>
+      <CTABanner/>
+      <LatestJobs/>
+      <Footer/>
+    
     </div>
   )
 }
