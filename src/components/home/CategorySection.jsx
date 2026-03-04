@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const CATEGORIES = [
   { name: 'Design',         icon: '🎨', count: 235 },
   { name: 'Sales',          icon: '📊', count: 756 },
@@ -19,9 +21,22 @@ const CategorySection = () => {
           <h2 style={{ fontSize: '32px', fontWeight: '800', color: '#1E2130', margin: 0 }}>
             Explore by <span style={{ color: '#3B82F6' }}>category</span>
           </h2>
-          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4F46E5', fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>
+          
+          {/* Replaced <a> with <Link> */}
+          <Link
+            to="/jobs"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#4F46E5',
+              fontWeight: '600',
+              fontSize: '14px',
+              textDecoration: 'none',
+            }}
+          >
             Show all jobs →
-          </a>
+          </Link>
         </div>
 
         {/* Grid */}
