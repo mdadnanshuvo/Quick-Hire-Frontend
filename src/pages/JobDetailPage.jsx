@@ -13,6 +13,7 @@ const JobDetailPage = () => {
   const [submitting, setSubmitting] = useState(false)
   const [apiError, setApiError] = useState('')
   const [errors, setErrors] = useState({})
+  const [showForm, setShowForm] = useState(false)
 
   const [form, setForm] = useState({
     name: '', email: '', resume_link: '', cover_note: ''
@@ -39,15 +40,13 @@ const JobDetailPage = () => {
     e.preventDefault()
     setApiError('')
     const validationErrors = validate()
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
-    }
+    if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return }
     setErrors({})
     setSubmitting(true)
     try {
       await applicationsApi.submit({ ...form, job_id: job.id })
       setSubmitted(true)
+      setShowForm(false)
     } catch (err) {
       setApiError(err.response?.data?.message || 'Something went wrong. Please try again.')
     } finally {
@@ -61,32 +60,39 @@ const JobDetailPage = () => {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
+  const TYPE_COLORS = {
+    'Full-time':  { color: '#059669', bg: '#ECFDF5' },
+    'Part-time':  { color: '#2563EB', bg: '#EFF6FF' },
+    'Remote':     { color: '#7C3AED', bg: '#F5F3FF' },
+    'Contract':   { color: '#D97706', bg: '#FFFBEB' },
+    'Internship': { color: '#DB2777', bg: '#FDF2F8' },
+  }
+
   const inputStyle = (hasError) => ({
-    width: '100%',
-    padding: '12px 16px',
-    fontSize: '14px',
+    width: '100%', padding: '12px 16px', fontSize: '14px',
     border: `1px solid ${hasError ? '#FCA5A5' : '#e5e7eb'}`,
-    borderRadius: '8px',
-    outline: 'none',
+    borderRadius: '8px', outline: 'none',
     background: hasError ? '#FEF2F2' : '#f8f8f8',
-    color: '#1E2130',
-    boxSizing: 'border-box',
+    color: '#1E2130', boxSizing: 'border-box',
     fontFamily: 'Epilogue, sans-serif',
   })
 
+  // ── Loading skeleton ──
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
-        <div style={{ flex: 1, maxWidth: '1200px', margin: '0 auto', padding: '48px', width: '100%' }}>
-          <div style={{ height: '24px', background: '#f3f4f6', borderRadius: '4px', width: '200px', marginBottom: '32px' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '32px' }}>
-            <div>
-              <div style={{ height: '32px', background: '#f3f4f6', borderRadius: '4px', width: '60%', marginBottom: '16px' }} />
-              <div style={{ height: '16px', background: '#f3f4f6', borderRadius: '4px', width: '40%', marginBottom: '32px' }} />
-              <div style={{ height: '200px', background: '#f3f4f6', borderRadius: '8px' }} />
+        <div style={{ flex: 1, background: '#F8F8FD', padding: '40px 0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ height: '20px', background: '#f3f4f6', borderRadius: '4px', width: '160px', marginBottom: '28px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '24px' }}>
+              <div>
+                <div style={{ height: '28px', background: '#f3f4f6', borderRadius: '4px', width: '55%', marginBottom: '12px' }} />
+                <div style={{ height: '16px', background: '#f3f4f6', borderRadius: '4px', width: '40%', marginBottom: '28px' }} />
+                <div style={{ height: '180px', background: '#f3f4f6', borderRadius: '8px' }} />
+              </div>
+              <div style={{ height: '380px', background: '#f3f4f6', borderRadius: '12px' }} />
             </div>
-            <div style={{ height: '400px', background: '#f3f4f6', borderRadius: '12px' }} />
           </div>
         </div>
         <Footer />
@@ -94,6 +100,7 @@ const JobDetailPage = () => {
     )
   }
 
+  // ── Not found ──
   if (!job) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -110,184 +117,287 @@ const JobDetailPage = () => {
     )
   }
 
-  const TYPE_COLORS = {
-    'Full-time':  { color: '#059669', bg: '#ECFDF5' },
-    'Part-time':  { color: '#2563EB', bg: '#EFF6FF' },
-    'Remote':     { color: '#7C3AED', bg: '#F5F3FF' },
-    'Contract':   { color: '#D97706', bg: '#FFFBEB' },
-    'Internship': { color: '#DB2777', bg: '#FDF2F8' },
-  }
   const typeStyle = TYPE_COLORS[job.type] || { color: '#6b7280', bg: '#f3f4f6' }
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
-
-      <div style={{ flex: 1, background: '#F8F8FD' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 48px' }}>
-
-          <button
-            onClick={() => navigate('/jobs')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', marginBottom: '32px', padding: 0 }}
-          >
-            ← Back to jobs
+  const ApplyForm = () => (
+    <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', padding: '28px' }}>
+      {submitted ? (
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div style={{ width: '60px', height: '60px', background: '#ECFDF5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '26px' }}>✅</div>
+          <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#1E2130', margin: '0 0 8px' }}>Application Submitted!</h3>
+          <p style={{ fontSize: '13px', color: '#9ca3af', lineHeight: '1.6', margin: '0 0 20px' }}>
+            Thank you for applying to <strong>{job.title}</strong> at {job.company}.
+          </p>
+          <button onClick={() => navigate('/jobs')} style={{ color: '#4F46E5', fontWeight: '600', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+            Browse more jobs →
           </button>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'start' }}>
-
-            {/* ── Left — Job Info ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-              {/* Header card */}
-              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', padding: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                  <div style={{ width: '64px', height: '64px', borderRadius: '12px', background: '#f8f8f8', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', flexShrink: 0 }}>
-                    🏢
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-                      <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#1E2130', margin: '0 0 4px' }}>
-                          {job.title}
-                        </h1>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>{job.company}</p>
-                      </div>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: typeStyle.color, background: typeStyle.bg, padding: '6px 16px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
-                        {job.type}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '20px', marginTop: '16px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        📍 {job.location}
-                      </span>
-                      <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        🕐 {job.type}
-                      </span>
-                      {job.salary && (
-                        <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          💰 {job.salary}
-                        </span>
-                      )}
-                      <span style={{ fontSize: '12px', fontWeight: '500', color: '#4F46E5', background: '#EEF2FF', padding: '3px 12px', borderRadius: '20px' }}>
-                        {job.category}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description card */}
-              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', padding: '32px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1E2130', margin: '0 0 16px' }}>
-                  Job Description
-                </h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>
-                  {job.description}
-                </p>
-
-                {job.requirements && job.requirements.length > 0 && (
-                  <div style={{ marginTop: '28px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1E2130', margin: '0 0 16px' }}>
-                      Requirements
-                    </h3>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {job.requirements.map((req, i) => (
-                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '14px', color: '#6b7280' }}>
-                          <span style={{ color: '#4F46E5', fontWeight: '700', marginTop: '1px' }}>✓</span>
-                          {req}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+        </div>
+      ) : (
+        <>
+          <h2 style={{ fontSize: '17px', fontWeight: '700', color: '#1E2130', margin: '0 0 20px' }}>Apply Now</h2>
+          {apiError && (
+            <div style={{ marginBottom: '14px', padding: '12px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', fontSize: '13px', color: '#EF4444' }}>
+              {apiError}
             </div>
+          )}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '5px' }}>Full Name *</label>
+              <input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" style={inputStyle(!!errors.name)} />
+              {errors.name && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.name}</p>}
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '5px' }}>Email Address *</label>
+              <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="john@example.com" style={inputStyle(!!errors.email)} />
+              {errors.email && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.email}</p>}
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '5px' }}>Resume Link *</label>
+              <input name="resume_link" value={form.resume_link} onChange={handleChange} placeholder="https://drive.google.com/your-resume" style={inputStyle(!!errors.resume_link)} />
+              {errors.resume_link && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.resume_link}</p>}
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '5px' }}>Cover Note</label>
+              <textarea name="cover_note" value={form.cover_note} onChange={handleChange} placeholder="Tell us why you're a great fit..." rows={3} style={{ ...inputStyle(false), resize: 'none', fontFamily: 'Epilogue, sans-serif' }} />
+            </div>
+            <button type="submit" disabled={submitting} style={{
+              width: '100%', padding: '13px',
+              background: submitting ? '#a5b4fc' : '#4F46E5',
+              color: 'white', border: 'none', borderRadius: '8px',
+              fontSize: '14px', fontWeight: '700', cursor: submitting ? 'not-allowed' : 'pointer',
+              fontFamily: 'Epilogue, sans-serif',
+            }}>
+              {submitting ? 'Submitting...' : '📨 Submit Application'}
+            </button>
+          </form>
+        </>
+      )}
+    </div>
+  )
 
-            {/* ── Right — Apply Form ── */}
-            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', padding: '32px', position: 'sticky', top: '88px' }}>
+  return (
+    <>
+      <style>{`
+        .jd-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+        .jd-body { flex: 1; background: #F8F8FD; }
+        .jd-inner { max-width: 1200px; margin: 0 auto; padding: 40px 48px; }
+        .jd-back {
+          display: flex; align-items: center; gap: 8px;
+          color: #6b7280; background: none; border: none;
+          cursor: pointer; font-size: '14px'; margin-bottom: 28px;
+          padding: 0; font-family: Epilogue, sans-serif;
+          font-size: 14px;
+        }
+        .jd-back:hover { color: #4F46E5; }
 
-              {submitted ? (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ width: '64px', height: '64px', background: '#ECFDF5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
-                    ✅
+        /* Desktop: 2-col grid */
+        .jd-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 360px;
+          gap: 24px;
+          align-items: start;
+        }
+        .jd-left { display: flex; flex-direction: column; gap: 20px; }
+
+        /* Sticky sidebar (desktop only) */
+        .jd-sidebar { position: sticky; top: 88px; }
+
+        /* Mobile apply button — hidden on desktop */
+        .jd-mobile-apply-btn { display: none; }
+
+        /* Mobile apply modal backdrop */
+        .jd-apply-backdrop {
+          display: none;
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 100;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .jd-apply-backdrop.open { display: flex; }
+        .jd-apply-sheet {
+          background: white;
+          border-radius: 20px 20px 0 0;
+          width: 100%;
+          max-height: 92vh;
+          overflow-y: auto;
+          padding: 8px 0 0;
+        }
+        .jd-sheet-handle {
+          width: 40px; height: 4px;
+          background: #e5e7eb; border-radius: 2px;
+          margin: 0 auto 16px;
+        }
+
+        /* ── Tablet (769–1024px) ── */
+        @media (max-width: 1024px) {
+          .jd-inner { padding: 32px; }
+          .jd-grid { grid-template-columns: minmax(0,1fr) 320px; }
+        }
+
+        /* ── Mobile (≤768px): single col + bottom sheet ── */
+        @media (max-width: 768px) {
+          .jd-inner { padding: 20px 16px 100px; }
+          .jd-grid { grid-template-columns: 1fr; }
+
+          /* Hide desktop sidebar */
+          .jd-sidebar { display: none; }
+
+          /* Show sticky apply button at bottom */
+          .jd-mobile-apply-btn {
+            display: flex;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+            z-index: 90;
+          }
+          .jd-mobile-apply-btn button {
+            width: 100%; padding: 14px;
+            background: #4F46E5; color: white;
+            border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; font-family: Epilogue, sans-serif;
+          }
+
+          /* Show backdrop on mobile */
+          .jd-apply-backdrop.open { display: flex; }
+        }
+
+        /* Job header card responsive */
+        .jd-header-card {
+          background: white; border-radius: 16px;
+          border: 1px solid #f0f0f0; padding: 28px;
+        }
+        .jd-header-row {
+          display: flex; align-items: flex-start; gap: 18px;
+        }
+        .jd-header-info { flex: 1; }
+        .jd-title-row {
+          display: flex; align-items: flex-start;
+          justify-content: space-between; gap: 12px;
+          flex-wrap: wrap; margin-bottom: 12px;
+        }
+        .jd-meta-row {
+          display: flex; gap: 16px;
+          flex-wrap: wrap; margin-top: 12px;
+        }
+        .jd-meta-item {
+          font-size: 13px; color: #6b7280;
+          display: flex; align-items: center; gap: 4px;
+        }
+
+        @media (max-width: 480px) {
+          .jd-header-card { padding: 20px; }
+          .jd-header-row { gap: 14px; }
+        }
+      `}</style>
+
+      <div className="jd-wrap">
+        <Navbar />
+        <div className="jd-body">
+          <div className="jd-inner">
+
+            {/* Back */}
+            <button className="jd-back" onClick={() => navigate('/jobs')}>
+              ← Back to jobs
+            </button>
+
+            <div className="jd-grid">
+
+              {/* ── Left: Job Info ── */}
+              <div className="jd-left">
+
+                {/* Header card */}
+                <div className="jd-header-card">
+                  <div className="jd-header-row">
+                    <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: '#f8f8f8', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0 }}>
+                      🏢
+                    </div>
+                    <div className="jd-header-info">
+                      <div className="jd-title-row">
+                        <div>
+                          <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1E2130', margin: '0 0 4px' }}>{job.title}</h1>
+                          <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>{job.company}</p>
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: typeStyle.color, background: typeStyle.bg, padding: '5px 14px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                          {job.type}
+                        </span>
+                      </div>
+                      <div className="jd-meta-row">
+                        <span className="jd-meta-item">📍 {job.location}</span>
+                        <span className="jd-meta-item">🕐 {job.type}</span>
+                        {job.salary && <span className="jd-meta-item">💰 {job.salary}</span>}
+                        <span style={{ fontSize: '12px', fontWeight: '500', color: '#4F46E5', background: '#EEF2FF', padding: '3px 12px', borderRadius: '20px' }}>
+                          {job.category}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1E2130', margin: '0 0 8px' }}>
-                    Application Submitted!
-                  </h3>
-                  <p style={{ fontSize: '14px', color: '#9ca3af', lineHeight: '1.6', margin: '0 0 24px' }}>
-                    Thank you for applying to <strong>{job.title}</strong> at {job.company}. Good luck!
-                  </p>
-                  <button
-                    onClick={() => navigate('/jobs')}
-                    style={{ color: '#4F46E5', fontWeight: '600', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    Browse more jobs →
-                  </button>
                 </div>
-              ) : (
-                <>
-                  <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1E2130', margin: '0 0 24px' }}>
-                    Apply Now
-                  </h2>
 
-                  {apiError && (
-                    <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', fontSize: '13px', color: '#EF4444' }}>
-                      {apiError}
+                {/* Description card */}
+                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', padding: '28px' }}>
+                  <h2 style={{ fontSize: '17px', fontWeight: '700', color: '#1E2130', margin: '0 0 14px' }}>Job Description</h2>
+                  <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {job.description}
+                  </p>
+                  {job.requirements && job.requirements.length > 0 && (
+                    <div style={{ marginTop: '24px' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1E2130', margin: '0 0 14px' }}>Requirements</h3>
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {job.requirements.map((req, i) => (
+                          <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '14px', color: '#6b7280' }}>
+                            <span style={{ color: '#4F46E5', fontWeight: '700', marginTop: '1px', flexShrink: 0 }}>✓</span>
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
+                </div>
 
-                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              </div>
 
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '6px' }}>Full Name *</label>
-                      <input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" style={inputStyle(!!errors.name)} />
-                      {errors.name && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.name}</p>}
-                    </div>
+              {/* ── Right: Apply Form (desktop sidebar) ── */}
+              <div className="jd-sidebar">
+                <ApplyForm />
+              </div>
 
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '6px' }}>Email Address *</label>
-                      <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="john@example.com" style={inputStyle(!!errors.email)} />
-                      {errors.email && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.email}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '6px' }}>Resume Link *</label>
-                      <input name="resume_link" value={form.resume_link} onChange={handleChange} placeholder="https://drive.google.com/your-resume" style={inputStyle(!!errors.resume_link)} />
-                      {errors.resume_link && <p style={{ fontSize: '12px', color: '#EF4444', margin: '4px 0 0' }}>{errors.resume_link}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#1E2130', marginBottom: '6px' }}>Cover Note</label>
-                      <textarea name="cover_note" value={form.cover_note} onChange={handleChange} placeholder="Tell us why you're a great fit..." rows={4} style={{ ...inputStyle(false), resize: 'none', fontFamily: 'Epilogue, sans-serif' }} />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      style={{
-                        width: '100%', padding: '14px',
-                        background: submitting ? '#a5b4fc' : '#4F46E5',
-                        color: 'white', border: 'none', borderRadius: '8px',
-                        fontSize: '15px', fontWeight: '700',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        fontFamily: 'Epilogue, sans-serif',
-                      }}
-                    >
-                      {submitting ? 'Submitting...' : '📨 Submit Application'}
-                    </button>
-
-                  </form>
-                </>
-              )}
             </div>
-
           </div>
         </div>
-      </div>
 
-      <Footer />
-    </div>
+        {/* ── Mobile: sticky Apply button ── */}
+        <div className="jd-mobile-apply-btn">
+          {submitted ? (
+            <button style={{ background: '#ECFDF5', color: '#059669', border: '2px solid #059669', borderRadius: '10px', padding: '14px', width: '100%', fontWeight: '700', fontSize: '15px', fontFamily: 'Epilogue, sans-serif', cursor: 'default' }}>
+              ✅ Application Submitted!
+            </button>
+          ) : (
+            <button onClick={() => setShowForm(true)}>📨 Apply for this Job</button>
+          )}
+        </div>
+
+        {/* ── Mobile: bottom sheet apply form ── */}
+        <div className={`jd-apply-backdrop ${showForm ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false) }}>
+          <div className="jd-apply-sheet">
+            <div className="jd-sheet-handle" />
+            <div style={{ padding: '0 20px 32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '17px', fontWeight: '700', color: '#1E2130', margin: 0 }}>Apply for {job.title}</h2>
+                <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#9ca3af', padding: '4px' }}>✕</button>
+              </div>
+              <ApplyForm />
+            </div>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </>
   )
 }
 

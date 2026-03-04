@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const CATEGORIES = [
   { name: 'Design',         icon: '🎨', count: 235 },
@@ -12,82 +12,216 @@ const CATEGORIES = [
 ]
 
 const CategorySection = () => {
+  const navigate = useNavigate()
+
+  const handleClick = (cat) => {
+    navigate(`/jobs?search=${encodeURIComponent(cat.name)}`)
+  }
+
   return (
-    <section style={{ background: 'white', padding: '60px 0' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 48px' }}>
+    <>
+      <style>{`
+        .cat-section {
+          background: white;
+          padding: 60px 0;
+        }
+        .cat-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 48px;
+        }
+        .cat-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 40px;
+        }
+        .cat-title {
+          font-size: 32px;
+          font-weight: 800;
+          color: #1E2130;
+          margin: 0;
+        }
+        .cat-title span { color: #3B82F6; }
+        .cat-show-all {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #4F46E5;
+          font-weight: 600;
+          font-size: 14px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: Epilogue, sans-serif;
+          text-decoration: none;
+        }
+        .cat-show-all:hover { text-decoration: underline; }
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: '800', color: '#1E2130', margin: 0 }}>
-            Explore by <span style={{ color: '#3B82F6' }}>category</span>
-          </h2>
-          
-          {/* Replaced <a> with <Link> */}
-          <Link
-            to="/jobs"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#4F46E5',
-              fontWeight: '600',
-              fontSize: '14px',
-              textDecoration: 'none',
-            }}
-          >
-            Show all jobs →
-          </Link>
-        </div>
+        /* Desktop grid — 4 columns */
+        .cat-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+        .cat-card {
+          padding: 28px 24px;
+          border-radius: 12px;
+          border: 1px solid #f0f0f0;
+          background: white;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .cat-card:hover {
+          border-color: #4F46E5;
+          box-shadow: 0 4px 16px rgba(79,70,229,0.1);
+        }
+        .cat-card.highlighted {
+          background: #4F46E5;
+          border: none;
+        }
+        .cat-card.highlighted:hover {
+          box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+        }
+        .cat-icon { font-size: 28px; margin-bottom: 16px; }
+        .cat-name {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1E2130;
+          margin: 0 0 6px;
+        }
+        .cat-card.highlighted .cat-name { color: white; }
+        .cat-count {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+          color: #9ca3af;
+        }
+        .cat-card.highlighted .cat-count { color: #c7d2fe; }
 
-        {/* Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-          {CATEGORIES.map((cat, i) => {
-            const isHighlighted = i === 2 // Marketing is highlighted per Figma
+        /* Mobile list — single column */
+        .cat-list { display: none; }
+        .cat-list-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px 0;
+          border-bottom: 1px solid #f3f4f6;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .cat-list-item:last-child { border-bottom: none; }
+        .cat-list-item:hover .cat-list-name { color: #4F46E5; }
+        .cat-list-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 10px;
+          background: #F8F8FD;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+        .cat-list-info { flex: 1; }
+        .cat-list-name {
+          font-size: 15px;
+          font-weight: 700;
+          color: #1E2130;
+          margin: 0 0 2px;
+          transition: color 0.15s;
+        }
+        .cat-list-count {
+          font-size: 13px;
+          color: #9ca3af;
+        }
+        .cat-list-arrow {
+          color: #9ca3af;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
 
-            return (
+        /* ── Tablet (769–1024px): 2 columns ── */
+        @media (max-width: 1024px) {
+          .cat-inner { padding: 0 32px; }
+          .cat-grid { grid-template-columns: repeat(2, 1fr); }
+          .cat-title { font-size: 26px; }
+        }
+
+        /* ── Mobile (≤768px): list layout ── */
+        @media (max-width: 768px) {
+          .cat-section { padding: 48px 0; }
+          .cat-inner { padding: 0 20px; }
+          .cat-title { font-size: 24px; }
+          .cat-header { margin-bottom: 24px; }
+
+          /* Hide grid, show list */
+          .cat-grid { display: none; }
+          .cat-list { display: block; }
+        }
+
+        @media (max-width: 480px) {
+          .cat-inner { padding: 0 16px; }
+          .cat-title { font-size: 22px; }
+        }
+      `}</style>
+
+      <section className="cat-section">
+        <div className="cat-inner">
+
+          {/* Header */}
+          <div className="cat-header">
+            <h2 className="cat-title">
+              Explore by <span>category</span>
+            </h2>
+            <button className="cat-show-all" onClick={() => navigate('/jobs')}>
+              Show all jobs →
+            </button>
+          </div>
+
+          {/* ── Desktop / Tablet: Grid ── */}
+          <div className="cat-grid">
+            {CATEGORIES.map((cat, i) => {
+              const isHighlighted = i === 2
+              return (
+                <div
+                  key={cat.name}
+                  className={`cat-card${isHighlighted ? ' highlighted' : ''}`}
+                  onClick={() => handleClick(cat)}
+                >
+                  <div className="cat-icon">{cat.icon}</div>
+                  <h3 className="cat-name">{cat.name}</h3>
+                  <div className="cat-count">
+                    <span>{cat.count} jobs available</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* ── Mobile: List ── */}
+          <div className="cat-list">
+            {CATEGORIES.map((cat) => (
               <div
                 key={cat.name}
-                style={{
-                  padding: '28px 24px',
-                  borderRadius: '12px',
-                  border: isHighlighted ? 'none' : '1px solid #f0f0f0',
-                  background: isHighlighted ? '#4F46E5' : 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => {
-                  if (!isHighlighted) {
-                    e.currentTarget.style.borderColor = '#4F46E5'
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(79,70,229,0.1)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isHighlighted) {
-                    e.currentTarget.style.borderColor = '#f0f0f0'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
+                className="cat-list-item"
+                onClick={() => handleClick(cat)}
               >
-                {/* Icon */}
-                <div style={{ fontSize: '28px', marginBottom: '16px' }}>{cat.icon}</div>
-
-                {/* Name */}
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: isHighlighted ? 'white' : '#1E2130', margin: '0 0 6px' }}>
-                  {cat.name}
-                </h3>
-
-                {/* Count */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: isHighlighted ? '#c7d2fe' : '#9ca3af' }}>
-                  <span>{cat.count} jobs available</span>
-                  <span>→</span>
+                <div className="cat-list-icon">{cat.icon}</div>
+                <div className="cat-list-info">
+                  <p className="cat-list-name">{cat.name}</p>
+                  <p className="cat-list-count">{cat.count} jobs available</p>
                 </div>
+                <span className="cat-list-arrow">→</span>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
 
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   )
 }
 
